@@ -5,70 +5,122 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>LaserZen</title>
+    <title>Aromas de Victoria Hub</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        body { margin: 0; overflow: hidden; background: #050508; font-family: -apple-system, sans-serif; color: white; }
         canvas { display: block; touch-action: none; }
-        #ui { 
-            position: absolute; 
-            top: 50px; 
-            left: 0; 
-            width: 100%; 
-            text-align: center; 
-            color: #00f2ff; 
-            letter-spacing: 3px; 
-            font-size: 10px; 
-            pointer-events: none; 
-            text-shadow: 0 0 10px #00f2ff;
-            text-transform: uppercase;
+        
+        /* Menú Principal */
+        #menu {
+            position: absolute; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(5, 5, 8, 0.95); z-index: 10;
+        }
+        h1 { font-size: 18px; letter-spacing: 4px; text-shadow: 0 0 10px #00f2ff; margin-bottom: 40px; }
+        .btn {
+            width: 250px; padding: 20px; margin: 10px;
+            background: transparent; border: 1px solid #00f2ff;
+            color: #00f2ff; border-radius: 15px; text-align: center;
+            font-size: 14px; letter-spacing: 2px; text-transform: uppercase;
+        }
+        
+        /* Botón para volver al menú */
+        #back-btn {
+            position: absolute; top: 40px; right: 20px;
+            padding: 8px 15px; background: rgba(255,255,255,0.1);
+            border-radius: 10px; font-size: 10px; z-index: 5; display: none;
         }
     </style>
 </head>
 <body>
-    <div id="ui">Aromas de Victoria // Laser Edition</div>
+
+    <div id="menu">
+        <h1>AROMAS DE VICTORIA<br><small style="font-size: 10px; opacity: 0.6;">STUDIO GAMES</small></h1>
+        <div class="btn" onclick="startGame('laser')">Láser Neón</div>
+        <div class="btn" onclick="startGame('pizarra')">Borrador de Pizarra</div>
+        <div class="btn" onclick="startGame('oro')">Lluvia de Oro</div>
+    </div>
+
+    <div id="back-btn" onclick="showMenu()">MENÚ</div>
     <canvas id="canvas"></canvas>
 
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        let width, height;
+        const menu = document.getElementById('menu');
+        const backBtn = document.getElementById('back-btn');
+        let mode = '';
 
-        function init() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            // Capa oscura que vamos a "limpiar"
-            ctx.fillStyle = '#0a0a0f';
-            ctx.fillRect(0, 0, width, height);
+        function startGame(type) {
+            mode = type;
+            menu.style.display = 'none';
+            backBtn.style.display = 'block';
+            initCanvas();
         }
 
-        function drawLaser(x, y) {
-            // "Limpia" la oscuridad
-            ctx.globalCompositeOperation = 'destination-out';
-            ctx.beginPath();
-            ctx.arc(x, y, 35, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Dibuja el efecto de luz del láser
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = '#00f2ff';
-            ctx.strokeStyle = '#00f2ff';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(x, y, 36, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.shadowBlur = 0;
+        function showMenu() {
+            menu.style.display = 'flex';
+            backBtn.style.display = 'none';
         }
 
-        // Detectar el dedo en iPhone
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            if (mode === 'pizarra') {
+                ctx.fillStyle = '#2c3e50'; // Color pizarra
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // Dibujar unas manchas de "tiza" iniciales
+                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                ctx.lineWidth = 2;
+                for(let i=0; i<50; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(Math.random()*canvas.width, Math.random()*canvas.height);
+                    ctx.lineTo(Math.random()*canvas.width, Math.random()*canvas.height);
+                    ctx.stroke();
+                }
+            } else {
+                ctx.fillStyle = '#0a0a0f';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function draw(x, y) {
+            if (mode === 'laser') {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath(); ctx.arc(x, y, 35, 0, Math.PI * 2); ctx.fill();
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.shadowBlur = 20; ctx.shadowColor = '#00f2ff';
+                ctx.strokeStyle = '#00f2ff'; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(x, y, 36, 0, Math.PI * 2); ctx.stroke();
+                ctx.shadowBlur = 0;
+            } 
+            else if (mode === 'pizarra') {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath();
+                ctx.arc(x, y, 40, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            else if (mode === 'oro') {
+                ctx.globalCompositeOperation = 'source-over';
+                for(let i=0; i<5; i++) {
+                    ctx.fillStyle = '#ffd700';
+                    ctx.shadowBlur = 10; ctx.shadowColor = '#fff';
+                    ctx.beginPath();
+                    ctx.arc(x + (Math.random()-0.5)*40, y + (Math.random()-0.5)*40, Math.random()*3, 0, Math.PI*2);
+                    ctx.fill();
+                }
+                ctx.shadowBlur = 0;
+            }
+        }
+
         canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
             const touch = e.touches[0];
-            drawLaser(touch.clientX, touch.clientY);
+            draw(touch.clientX, touch.clientY);
         }, { passive: false });
 
-        window.addEventListener('resize', init);
-        init();
+        window.addEventListener('resize', initCanvas);
     </script>
 </body>
 </html>
