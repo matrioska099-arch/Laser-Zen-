@@ -3,58 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>LaserZen</title>
     <style>
-        body { margin: 0; background: #000; overflow: hidden; touch-action: none; font-family: sans-serif; }
-        canvas { display: block; }
-        #ui { position: absolute; top: 20px; left: 20px; color: #00f2ff; pointer-events: none; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; opacity: 0.5; }
+        body { margin: 0; overflow: hidden; background: #000; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        canvas { display: block; touch-action: none; }
+        #ui { 
+            position: absolute; 
+            top: 50px; 
+            left: 0; 
+            width: 100%; 
+            text-align: center; 
+            color: #00f2ff; 
+            letter-spacing: 3px; 
+            font-size: 10px; 
+            pointer-events: none; 
+            text-shadow: 0 0 10px #00f2ff;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
-    <div id="ui">LaserZen // Modo Creadora</div>
-    <canvas id="c"></canvas>
-<script>
-    const canvas = document.getElementById('c');
-    const ctx = canvas.getContext('2d');
-    let cutting = false;
+    <div id="ui">Aromas de Victoria // Laser Edition</div>
+    <canvas id="canvas"></canvas>
 
-    function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        ctx.fillStyle = '#050a14'; // Fondo cristalino profundo
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
 
-    window.onresize = resize;
-    resize();
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            // Capa oscura que vamos a "limpiar"
+            ctx.fillStyle = '#0a0a0f';
+            ctx.fillRect(0, 0, width, height);
+        }
 
-    function start(e) {
-        cutting = true;
-        const t = e.touches ? e.touches[0] : e;
-        ctx.beginPath();
-        ctx.moveTo(t.clientX, t.clientY);
-    }
+        function drawLaser(x, y) {
+            // "Limpia" la oscuridad
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath();
+            ctx.arc(x, y, 35, 0, Math.PI * 2);
+            ctx.fill();
 
-    function move(e) {
-        if (!cutting) return;
-        const t = e.touches ? e.touches[0] : e;
-        
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.lineWidth = 10;
-        ctx.lineCap = 'round';
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = '#00f2ff';
-        
-        ctx.lineTo(t.clientX, t.clientY);
-        ctx.stroke();
+            // Dibuja el efecto de luz del láser
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#00f2ff';
+            ctx.strokeStyle = '#00f2ff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(x, y, 36, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
 
-        if (navigator.vibrate) navigator.vibrate(10);
-    }
+        // Detectar el dedo en iPhone
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            drawLaser(touch.clientX, touch.clientY);
+        }, { passive: false });
 
-    function end() { cutting = false; }
-
-    canvas.addEventListener('touchstart', start);
-    canvas.addEventListener('touchmove', move);
-    canvas.addEventListener('touchend', end);
-</script>
+        window.addEventListener('resize', init);
+        init();
+    </script>
 </body>
 </html>
