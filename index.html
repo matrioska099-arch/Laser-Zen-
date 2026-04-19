@@ -14,12 +14,12 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             background: rgba(5, 5, 8, 0.98); z-index: 10;
         }
-        h1 { font-size: 18px; letter-spacing: 4px; text-shadow: 0 0 10px #00f2ff; margin-bottom: 30px; text-align: center; }
+        h1 { font-size: 18px; letter-spacing: 4px; text-shadow: 0 0 10px #00f2ff; margin-bottom: 20px; text-align: center; }
         .btn {
-            width: 250px; padding: 15px; margin: 8px;
+            width: 250px; padding: 12px; margin: 5px;
             background: transparent; border: 1px solid #00f2ff;
             color: #00f2ff; border-radius: 12px; text-align: center;
-            font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+            font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
         }
         #back-btn {
             position: absolute; top: 50px; right: 20px;
@@ -32,6 +32,7 @@
 
     <div id="menu">
         <h1>AROMAS DE VICTORIA<br><small style="font-size: 10px; opacity: 0.6;">STUDIO GAMES</small></h1>
+        <div class="btn" onclick="startGame('popit')">Pop-it Mágico</div>
         <div class="btn" onclick="startGame('laser')">Láser Neón</div>
         <div class="btn" onclick="startGame('pizarra')">Borrador de Pizarra</div>
         <div class="btn" onclick="startGame('oro')">Lluvia de Oro</div>
@@ -48,14 +49,14 @@
         const menu = document.getElementById('menu');
         const backBtn = document.getElementById('back-btn');
         let mode = '';
-        let particles = [];
+        let bubbles = [];
 
         function startGame(type) {
             mode = type;
             menu.style.display = 'none';
             backBtn.style.display = 'block';
-            particles = [];
             initCanvas();
+            if (mode === 'popit') createPopIt();
         }
 
         function showMenu() {
@@ -67,17 +68,56 @@
         function initCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            ctx.globalCompositeOperation = 'source-over';
-            if (mode === 'pizarra') {
-                ctx.fillStyle = '#2c3e50';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = (mode === 'pizarra') ? '#2c3e50' : '#0a0a0f';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function createPopIt() {
+            bubbles = [];
+            const rows = 8;
+            const cols = 5;
+            const spacing = canvas.width / (cols + 1);
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    bubbles.push({
+                        x: spacing * (c + 1),
+                        y: 150 + (r * 70),
+                        r: 25,
+                        pop: false,
+                        color: `hsl(${r * 40}, 70%, 60%)`
+                    });
+                }
+            }
+            drawPopIt();
+        }
+
+        function drawPopIt() {
+            ctx.fillStyle = '#0a0a0f';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            bubbles.forEach(b => {
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.pop ? b.r * 0.8 : b.r, 0, Math.PI * 2);
+                ctx.fillStyle = b.pop ? '#111' : b.color;
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+        }
+
+        function handleTouch(x, y) {
+            if (mode === 'popit') {
+                bubbles.forEach(b => {
+                    const dist = Math.hypot(b.x - x, b.y - y);
+                    if (dist < b.r) b.pop = !b.pop;
+                });
+                drawPopIt();
             } else {
-                ctx.fillStyle = '#0a0a0f';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                drawOther(x, y);
             }
         }
 
-        function draw(x, y) {
+        function drawOther(x, y) {
             if (mode === 'laser') {
                 ctx.globalCompositeOperation = 'destination-out';
                 ctx.beginPath(); ctx.arc(x, y, 35, 0, Math.PI * 2); ctx.fill();
@@ -86,39 +126,33 @@
                 ctx.strokeStyle = '#00f2ff'; ctx.lineWidth = 3;
                 ctx.beginPath(); ctx.arc(x, y, 36, 0, Math.PI * 2); ctx.stroke();
                 ctx.shadowBlur = 0;
-            } 
-            else if (mode === 'pizarra') {
+            } else if (mode === 'arena') {
+                ctx.fillStyle = `hsl(${Math.random() * 50 + 180}, 100%, 50%)`;
+                ctx.beginPath(); ctx.arc(x + (Math.random()-0.5)*60, y + (Math.random()-0.5)*60, Math.random()*5, 0, Math.PI*2); ctx.fill();
+            } else if (mode === 'oro' || mode === 'diamante') {
+                const color = mode === 'oro' ? '#ffd700' : '#ffffff';
+                for(let i=0; i<6; i++) {
+                    ctx.fillStyle = color; ctx.shadowBlur = 15; ctx.shadowColor = color;
+                    ctx.beginPath(); ctx.arc(x + (Math.random()-0.5)*50, y + (Math.random()-0.5)*50, Math.random()*4, 0, Math.PI*2); ctx.fill();
+                }
+                ctx.shadowBlur = 0;
+            } else if (mode === 'pizarra') {
                 ctx.globalCompositeOperation = 'destination-out';
                 ctx.beginPath(); ctx.arc(x, y, 40, 0, Math.PI * 2); ctx.fill();
             }
-            else if (mode === 'oro' || mode === 'diamante') {
-                const color = mode === 'oro' ? '#ffd700' : '#ffffff';
-                ctx.globalCompositeOperation = 'source-over';
-                for(let i=0; i<6; i++) {
-                    ctx.fillStyle = color;
-                    ctx.shadowBlur = 15; ctx.shadowColor = color;
-                    ctx.beginPath();
-                    ctx.arc(x + (Math.random()-0.5)*50, y + (Math.random()-0.5)*50, Math.random()*4, 0, Math.PI*2);
-                    ctx.fill();
-                }
-                ctx.shadowBlur = 0;
-            }
-            else if (mode === 'arena') {
-                ctx.globalCompositeOperation = 'source-over';
-                for(let i=0; i<8; i++) {
-                    ctx.fillStyle = `hsl(${Math.random() * 50 + 180}, 100%, 50%)`; // Tonos azul/turquesa
-                    ctx.beginPath();
-                    ctx.arc(x + (Math.random()-0.5)*60, y + (Math.random()-0.5)*60, Math.random()*5, 0, Math.PI*2);
-                    ctx.fill();
-                }
-            }
         }
 
-        canvas.addEventListener('touchmove', (e) => {
-            if(!mode) return;
-            e.preventDefault();
+        canvas.addEventListener('touchstart', (e) => {
             const touch = e.touches[0];
-            draw(touch.clientX, touch.clientY);
+            handleTouch(touch.clientX, touch.clientY);
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (mode !== 'popit') {
+                e.preventDefault();
+                const touch = e.touches[0];
+                handleTouch(touch.clientX, touch.clientY);
+            }
         }, { passive: false });
 
         window.addEventListener('resize', initCanvas);
